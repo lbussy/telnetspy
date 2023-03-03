@@ -1,0 +1,30 @@
+{
+    "name": "TelnetSpy",
+    "version": "1.4.0",
+    "description": "Clones the serial port via Telnet for monitoring or debugging 'over the air' (for ESP8266/ESP32).",
+    "keywords": "serial, debug, telnet",
+    "repository":
+    {
+      "type": "git",
+      "url": "https://github.com/lbussy/telnetspy.git"
+    },
+    "authors":
+    [
+        {
+            "name": "Lee Bussy",
+            "email": "lee@bussy.org",
+            "url": "https://www.bussy.org",
+            "maintainer": true
+          },
+          {
+        "name": "Wolfgang Mattis",
+        "email": "git@gedankenspieler.de",
+        "url": "http://www.gedankenspieler.de"
+      }
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/lbussy/telnetspy/blob/main/LICENSE.txt",
+    "dependencies": {},
+    "frameworks": "Arduino",
+    "platforms": ["esp8266", "esp32"]
+  }
