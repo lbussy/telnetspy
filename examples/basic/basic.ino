@@ -14,9 +14,11 @@
 #include "secret.h" // Include for AP_NAME and PASSWD below
 const char *ssid = AP_NAME;
 const char *password = PASSWRD;
+const int baud = BAUD
 #else
 const char *ssid = "my_ap";
 const char *password = "passsword";
+const int baud = 115200;
 #endif
 
 TelnetSpy SerialAndTelnet;
@@ -65,7 +67,7 @@ void setup()
     SERIAL.setCallbackOnConnect(telnetConnected);
     SERIAL.setCallbackOnDisconnect(telnetDisconnected);
     SERIAL.setFilter(char(1), F("\r\nNVT command: AO\r\n"), disconnectClientWrapper);
-    SERIAL.begin(115200);
+    SERIAL.begin(baud);
     delay(100); // Wait for serial port
     // SERIAL.setDebugOutput(false);
     SERIAL.print(F("Connecting to WiFi.."));
