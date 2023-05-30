@@ -10,8 +10,14 @@
 #include <ESPmDNS.h>
 #endif
 
-const char *ssid = "yourSSID";
-const char *password = "yourPassword";
+#if __has_include("./secret.h")
+#include "secret.h" // Include for AP_NAME and PASSWD below
+const char *ssid = AP_NAME;
+const char *password = PASSWRD;
+#else
+const char *ssid = "my_ap";
+const char *password = "passsword";
+#endif
 
 TelnetSpy SerialAndTelnet;
 
