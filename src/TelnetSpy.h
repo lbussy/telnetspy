@@ -299,6 +299,8 @@ class TelnetSpy : public Stream
 public:
 	TelnetSpy();
 	~TelnetSpy();
+	bool enabled();
+	void toggle(bool enable);
 	void handle(void);
 	void setPort(uint16_t portToUse);
 	void setWelcomeMsg(const char *msg);
@@ -397,6 +399,7 @@ protected:
 	bool started;
 	bool listening;
 	bool firstMainLoop;
+	bool isEnabled;
 #ifdef RLJ_SPY_MODS
 	void removeOldestLine(void);
 	void setHoldoff(unsigned long &holdoff, unsigned long period);
