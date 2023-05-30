@@ -21,9 +21,10 @@ const char *password = "passsword";
 const int baud = 115200;
 #endif
 
-TelnetSpy SerialAndTelnet;
+    TelnetSpy SerialAndTelnet;
 
 // #define SERIAL  Serial
+#undef SERIAL
 #define SERIAL SerialAndTelnet
 
 void waitForConnection()

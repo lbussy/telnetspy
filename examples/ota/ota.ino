@@ -25,6 +25,7 @@ const int baud = 115200;
 TelnetSpy SerialAndTelnet;
 
 // #define SER  Serial
+#undef SERIAL
 #define SERIAL SerialAndTelnet
 
 void waitForConnection()
