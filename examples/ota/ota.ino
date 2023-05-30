@@ -17,16 +17,16 @@ const char *password = "yourPassword";
 TelnetSpy SerialAndTelnet;
 
 // #define SER  Serial
-#define SER SerialAndTelnet
+#define SERIAL SerialAndTelnet
 
 void waitForConnection()
 {
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
-        SER.print(".");
+        SERIAL.print(".");
     }
-    SER.println(F(" Connected!"));
+    SERIAL.println(F(" Connected!"));
 }
 
 void waitForDisconnection()
@@ -34,36 +34,36 @@ void waitForDisconnection()
     while (WiFi.status() == WL_CONNECTED)
     {
         delay(500);
-        SER.print(".");
+        SERIAL.print(".");
     }
-    SER.println(F(" Disconnected!"));
+    SERIAL.println(F(" Disconnected!"));
 }
 
 void telnetConnected()
 {
-    SER.println(F("Telnet connection established."));
+    SERIAL.println(F("Telnet connection established."));
 }
 
 void telnetDisconnected()
 {
-    SER.println(F("Telnet connection closed."));
+    SERIAL.println(F("Telnet connection closed."));
 }
 
 void disconnectClientWrapper()
 {
-    SerialAndTelnet.disconnectClient();
+    SERIAL.disconnectClient();
 }
 
 void setup()
 {
-    SerialAndTelnet.setWelcomeMsg(F("Welcome to the TelnetSpy example\r\n"));
-    SerialAndTelnet.setCallbackOnConnect(telnetConnected);
-    SerialAndTelnet.setCallbackOnDisconnect(telnetDisconnected);
-    SerialAndTelnet.setFilter(char(1), F("\r\nNVT command: AO\r\n"), disconnectClientWrapper);
-    SER.begin(115200);
+    SERIAL.setWelcomeMsg(F("Welcome to the TelnetSpy example\r\n"));
+    SERIAL.setCallbackOnConnect(telnetConnected);
+    SERIAL.setCallbackOnDisconnect(telnetDisconnected);
+    SERIAL.setFilter(char(1), F("\r\nNVT command: AO\r\n"), disconnectClientWrapper);
+    SERIAL.begin(115200);
     delay(100); // Wait for serial port
-    //  SER.setDebugOutput(false);
-    SER.print(F("Connecting to WiFi.."));
+    //  SERIAL.setDebugOutput(false);
+    SERIAL.print(F("Connecting to WiFi.."));
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
     waitForConnection();
@@ -87,54 +87,54 @@ void setup()
     else if (error == OTA_END_ERROR) Serial.println(F("End Failed")); });
     ArduinoOTA.begin();
 
-    SER.print(F("IP address: "));
-    SER.println(WiFi.localIP());
+    SERIAL.print(F("IP address: "));
+    SERIAL.println(WiFi.localIP());
 
-    SER.println(F("\r\nType 'C' for WiFi connect.\r\nType 'D' for WiFi disconnect.\r\nType 'R' for WiFi reconnect."));
-    SER.println(F("Type 'X' or Ctrl-A for closing telnet session.\r\n"));
-    SER.println(F("All other chars will be echoed. Play around...\r\n"));
-    SER.println(F("The following 'Special Commands' (telnet NVT protocol) are supported:"));
-    SER.println(F("  - Abort Output (AO) => closing telnet session."));
-    SER.println(F("  - Interrupt Process (IP) => restart the ESP.\r\n"));
+    SERIAL.println(F("\r\nType 'C' for WiFi connect.\r\nType 'D' for WiFi disconnect.\r\nType 'R' for WiFi reconnect."));
+    SERIAL.println(F("Type 'X' or Ctrl-A for closing telnet session.\r\n"));
+    SERIAL.println(F("All other chars will be echoed. Play around...\r\n"));
+    SERIAL.println(F("The following 'Special Commands' (telnet NVT protocol) are supported:"));
+    SERIAL.println(F("  - Abort Output (AO) => closing telnet session."));
+    SERIAL.println(F("  - Interrupt Process (IP) => restart the ESP.\r\n"));
 }
 
 void loop()
 {
-    SerialAndTelnet.handle();
+    SERIAL.handle();
     ArduinoOTA.handle();
 
-    if (SER.available() > 0)
+    if (SERIAL.available() > 0)
     {
-        char c = SER.read();
+        char c = SERIAL.read();
         switch (c)
         {
         case '\r':
-            SER.println();
+            SERIAL.println();
             break;
         case '\n':
             break;
         case 'C':
-            SER.print(F("\r\nConnecting "));
+            SERIAL.print(F("\r\nConnecting "));
             WiFi.begin(ssid, password);
             waitForConnection();
             break;
         case 'D':
-            SER.print(F("\r\nDisconnecting ..."));
+            SERIAL.print(F("\r\nDisconnecting ..."));
             WiFi.disconnect();
             waitForDisconnection();
             break;
         case 'R':
-            SER.print(F("\r\nReconnecting "));
+            SERIAL.print(F("\r\nReconnecting "));
             WiFi.reconnect();
             waitForDisconnection();
             waitForConnection();
             break;
         case 'X':
-            SER.println(F("\r\nClosing telnet session..."));
-            SerialAndTelnet.disconnectClient();
+            SERIAL.println(F("\r\nClosing telnet session..."));
+            SERIAL.disconnectClient();
             break;
         default:
-            SER.print(c);
+            SERIAL.print(c);
             break;
         }
     }

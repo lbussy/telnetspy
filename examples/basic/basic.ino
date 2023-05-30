@@ -50,15 +50,15 @@ void telnetDisconnected()
 
 void disconnectClientWrapper()
 {
-    SerialAndTelnet.disconnectClient();
+    SERIAL.disconnectClient();
 }
 
 void setup()
 {
-    SerialAndTelnet.setWelcomeMsg(F("Welcome to the TelnetSpy.\r\n"));
-    SerialAndTelnet.setCallbackOnConnect(telnetConnected);
-    SerialAndTelnet.setCallbackOnDisconnect(telnetDisconnected);
-    SerialAndTelnet.setFilter(char(1), F("\r\nNVT command: AO\r\n"), disconnectClientWrapper);
+    SERIAL.setWelcomeMsg(F("Welcome to the TelnetSpy.\r\n"));
+    SERIAL.setCallbackOnConnect(telnetConnected);
+    SERIAL.setCallbackOnDisconnect(telnetDisconnected);
+    SERIAL.setFilter(char(1), F("\r\nNVT command: AO\r\n"), disconnectClientWrapper);
     SERIAL.begin(115200);
     delay(100); // Wait for serial port
     // SERIAL.setDebugOutput(false);
@@ -80,8 +80,7 @@ void setup()
 
 void loop()
 {
-    SerialAndTelnet.handle();
-    ArduinoOTA.handle();
+    SERIAL.handle();
 
     if (SERIAL.available() > 0)
     {
@@ -111,7 +110,7 @@ void loop()
             break;
         case 'X':
             SERIAL.println(F("\r\nClosing telnet session.."));
-            SerialAndTelnet.disconnectClient();
+            SERIAL.disconnectClient();
             break;
         default:
             SERIAL.print(c);
