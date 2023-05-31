@@ -67,6 +67,7 @@ TelnetSpy::TelnetSpy()
 	started = false;
 	listening = false;
 	firstMainLoop = true;
+	isEnabled = true;
 #ifdef RLJ_SPY_MODS
 	usedSer = &TELNETSPY_SERIALPORT; // OTHER WORK: nifty SerialIntercept by hooking HardwareSerial - then you can collect other Arduino library messages!
 #else
@@ -1074,11 +1075,24 @@ void TelnetSpy::toggle(bool enable)
 {
 	if (isEnabled && !enable)
 	{
-		connected = false;
-		listening = false;
-		telnetServer->close();
-		delete telnetServer;
-		isEnabled = false;
+		if (listening)
+		{
+			if (client.connected())
+			{
+				sendBlock();
+				client.flush();
+				client.stop();
+			}
+			if (connected && (callbackDisconnect != NULL))
+			{
+				callbackDisconnect();
+			}
+			connected = false;
+			listening = false;
+			telnetServer->close();
+			delete telnetServer;
+			isEnabled = false;
+		}
 	}
 	else if (!isEnabled && enable)
 	{
