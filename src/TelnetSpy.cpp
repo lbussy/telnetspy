@@ -67,6 +67,7 @@ TelnetSpy::TelnetSpy()
 	started = false;
 	listening = false;
 	firstMainLoop = true;
+	isEnabled = true;
 #ifdef RLJ_SPY_MODS
 	usedSer = &TELNETSPY_SERIALPORT; // OTHER WORK: nifty SerialIntercept by hooking HardwareSerial - then you can collect other Arduino library messages!
 #else
@@ -408,47 +409,51 @@ void TelnetSpy::setSerial(HardwareSerial *usedSerial)
 
 size_t TelnetSpy::write(uint8_t data)
 {
-	if (telnetBuf)
+	if (isEnabled) // Skip Telnet processing if not enabled
 	{
-		if (storeOffline || client.connected())
+		if (telnetBuf)
 		{
-			if (bufUsed == bufLen)
-			{ // BUFFER IS FULL!
-				if (client.connected())
-				{
-					sendBlock(); // try and send - but why? - does not change avaialble write space!
-				}
+			if (storeOffline || client.connected())
+			{
 				if (bufUsed == bufLen)
-				{ // buffer is 100% full, shed oldest line
+				{ // BUFFER IS FULL!
+					if (client.connected())
+					{
+						sendBlock(); // try and send - but why? - does not change avaialble write space!
+					}
+					if (bufUsed == bufLen)
+					{ // buffer is 100% full, shed oldest line
 #ifdef RLJ_SPY_MODS
-					removeOldestLine();
+						removeOldestLine();
 #else
-					char c;
-					while (bufUsed > 0)
-					{
-						c = pullTelnetBuf();
-						if (c == '\n')
+						char c;
+						while (bufUsed > 0)
 						{
-							break;
+							c = pullTelnetBuf();
+							if (c == '\n')
+							{
+								break;
+							}
 						}
-					}
-					if (peekTelnetBuf() == '\r')
-					{
-						pullTelnetBuf();
-					}
+						if (peekTelnetBuf() == '\r')
+						{
+							pullTelnetBuf();
+						}
 #endif
+					}
 				}
+				addTelnetBuf(data);
 			}
-			addTelnetBuf(data);
 		}
-	}
-	else
-	{
-		if (client.connected())
+		else
 		{
-			client.write(data);
+			if (client.connected())
+			{
+				client.write(data);
+			}
 		}
 	}
+
 	if ((NULL != usedSer) && *usedSer)
 	{
 		return usedSer->write(data);
@@ -1059,6 +1064,41 @@ void TelnetSpy::setCallbackOnNvtGA(void (*callback)())
 void TelnetSpy::setCallbackOnNvtWWDD(void (*callback)(char command, char option))
 {
 	callbackNvtWWDD = callback;
+}
+
+bool TelnetSpy::enabled()
+{
+	return isEnabled;
+}
+
+void TelnetSpy::toggle(bool enable)
+{
+	if (isEnabled && !enable)
+	{
+		if (listening)
+		{
+			if (client.connected())
+			{
+				sendBlock();
+				client.flush();
+				client.stop();
+			}
+			if (connected && (callbackDisconnect != NULL))
+			{
+				callbackDisconnect();
+			}
+			connected = false;
+			listening = false;
+			telnetServer->close();
+			delete telnetServer;
+			isEnabled = false;
+		}
+	}
+	else if (!isEnabled && enable)
+	{
+		isEnabled = true;
+		handle(); // handle() will reconnect server
+	}
 }
 
 void TelnetSpy::handle()
