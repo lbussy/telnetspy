@@ -10,32 +10,47 @@
 #include <ESPmDNS.h>
 #endif
 
-const char *ssid = "yourSSID";
-const char *password = "yourPassword";
+#if __has_include("./secrets.h")
+#include "secrets.h" // Include for AP_NAME and PASSWD below
+const char *ssid = AP_NAME;
+const char *password = PASSWRD;
+const char *hostname = HOSTNAME;
+const int baud = BAUD;
+#else
+const char *ssid = "my_ap";
+const char *password = "passsword";
+const char *hostname = "telnethost";
+const int baud = 115200;
+#endif
 
 TelnetSpy SerialAndTelnet;
 
 // #define SERIAL  Serial
+#undef SERIAL
 #define SERIAL SerialAndTelnet
 
 void waitForConnection()
 {
+    SERIAL.print(F("Connecting to WiFi.."));
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
         SERIAL.print(".");
     }
-    SERIAL.println(F(" Connected!"));
+    SERIAL.println();
+    SERIAL.println(F("Connected!"));
 }
 
 void waitForDisconnection()
 {
+    SERIAL.print(F("Disconnecting from WiFi.."));
     while (WiFi.status() == WL_CONNECTED)
     {
         delay(500);
         SERIAL.print(".");
     }
-    SERIAL.println(F(" Disconnected!"));
+    SERIAL.println();
+    SERIAL.println(F("Disconnected!"));
 }
 
 void telnetConnected()
@@ -50,27 +65,42 @@ void telnetDisconnected()
 
 void disconnectClientWrapper()
 {
-    SerialAndTelnet.disconnectClient();
+    SERIAL.disconnectClient();
 }
 
 void setup()
 {
-    SerialAndTelnet.setWelcomeMsg(F("Welcome to the TelnetSpy.\r\n"));
-    SerialAndTelnet.setCallbackOnConnect(telnetConnected);
-    SerialAndTelnet.setCallbackOnDisconnect(telnetDisconnected);
-    SerialAndTelnet.setFilter(char(1), F("\r\nNVT command: AO\r\n"), disconnectClientWrapper);
-    SERIAL.begin(115200);
+    SERIAL.setWelcomeMsg(F("Welcome to the TelnetSpy.\r\n"));
+    SERIAL.setCallbackOnConnect(telnetConnected);
+    SERIAL.setCallbackOnDisconnect(telnetDisconnected);
+    SERIAL.setFilter(char(1), F("\r\nNVT command: AO\r\n"), disconnectClientWrapper);
+    SERIAL.begin(baud);
     delay(100); // Wait for serial port
     // SERIAL.setDebugOutput(false);
-    SERIAL.print(F("Connecting to WiFi.."));
+    WiFi.disconnect(true);
+#ifdef ESP8266
+    WiFi.hostname(hostname);
+#else
+    WiFi.setHostname(hostname);
+#endif
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
     waitForConnection();
 
+#ifdef ESP8266
+    MDNS.begin(hostname);
+#else // ESP32
+    MDNS.begin(hostname);
+#endif
+    MDNS.addService("telnet", "tcp", 23);
+    SERIAL.print(F("MDNS started, hostname: "));
+    SERIAL.print(hostname);
+    SERIAL.println(".local");
+
     SERIAL.print(F("IP address: "));
     SERIAL.println(WiFi.localIP());
 
-    SERIAL.println(F("\r\nType 'C' for WiFi connect.\r\nType 'D' for WiFi disconnect.\r\nType 'R' for WiFi reconnect."));
+    SERIAL.println(F("\r\nType 'C' for WiFi.\r\nType 'D' for WiFi disconnect.\r\nType 'R' for WiFi reconnect.\r\nType 'T' for Telnet toggle."));
     SERIAL.println(F("Type 'X' or Ctrl-A for closing telnet session.\r\n"));
     SERIAL.println(F("All other chars will be echoed. Play around...\r\n"));
     SERIAL.println(F("The following 'Special Commands' (telnet NVT protocol) are supported:"));
@@ -80,8 +110,8 @@ void setup()
 
 void loop()
 {
-    SerialAndTelnet.handle();
-    ArduinoOTA.handle();
+    MDNS.update();
+    SERIAL.handle();
 
     if (SERIAL.available() > 0)
     {
@@ -111,7 +141,19 @@ void loop()
             break;
         case 'X':
             SERIAL.println(F("\r\nClosing telnet session.."));
-            SerialAndTelnet.disconnectClient();
+            SERIAL.disconnectClient();
+            break;
+        case 'T':
+            if (SERIAL.enabled())
+            {
+                SERIAL.toggle(false);
+                SERIAL.println(F("\r\nTelnet disabled."));
+            }
+            else
+            {
+                SERIAL.toggle(true);
+                SERIAL.println(F("\r\nTelnet enabled."));
+            }
             break;
         default:
             SERIAL.print(c);
