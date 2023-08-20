@@ -1141,7 +1141,11 @@ void TelnetSpy::handle()
 	{
 		if (client.connected())
 		{
+#if defined ESP8266
+			WiFiClient rejectClient = telnetServer->accept();
+#else
 			WiFiClient rejectClient = telnetServer->available();
+#endif
 			if (strlen(rejectMsg) > 0)
 			{
 				rejectClient.write((const uint8_t *)rejectMsg, strlen(rejectMsg));
@@ -1151,7 +1155,11 @@ void TelnetSpy::handle()
 		}
 		else
 		{
+#if defined ESP8266
+			client = telnetServer->accept();
+#else
 			client = telnetServer->available();
+#endif
 			if (strlen(welcomeMsg) > 0)
 			{
 				client.write((const uint8_t *)welcomeMsg, strlen(welcomeMsg));
