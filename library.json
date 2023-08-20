@@ -1,6 +1,6 @@
 {
     "name": "TelnetSpy",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "description": "Clones the serial port via Telnet for monitoring or debugging 'over the air' (for ESP8266/ESP32).",
     "keywords": "serial, debug, telnet",
     "repository":
